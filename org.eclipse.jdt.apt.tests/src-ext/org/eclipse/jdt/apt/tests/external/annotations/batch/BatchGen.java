@@ -15,4 +15,6 @@ package org.eclipse.jdt.apt.tests.external.annotations.batch;
 
 public @interface BatchGen {
 
+	String[] values() default {};
+
 }

@@ -179,15 +179,67 @@ public class AnnotationProcessingCompilerToolTest extends AbstractBatchCompilerT
 				"Works2.java"
 			},
 			"Discovered processor service org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor\n" +
-			"  supporting [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen]\n" + 
-			"  in jar:"  + Path.of(_extJar.getCanonicalPath()).toUri().toURL().toString() + "!/\n" + 
-			"Processor org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor matches [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen] and returns true\n" + 
+			"  supporting [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen]\n" +
+			"  in jar:"  + Path.of(_extJar.getCanonicalPath()).toUri().toURL().toString() + "!/\n" +
+			"Processor org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor matches [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen] and returns true\n" +
 			"Processor org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor matches [] and returns false\n",
 			"" /* expectedErrOutputString */,
 			true /* shouldFlushOutputDirectory */ );
 		// @formatter:on
 	}
-	
+
+	public void test_github_tbd() throws IOException {
+		// @formatter:off
+		runTest(
+			true /* shouldCompileOK */,
+			new String [] { /* sourceFiles */
+				"X.java",
+				"package p1;\n"
+				+ "\n import org.eclipse.jdt.apt.tests.external.annotations.batch.*;"
+				+ "\n import p1.gen.*;"
+				+ "\n@BatchGen(values={\"hello\"})\n"
+				+ "public class X {"
+				+ "   Class0 clazz0;\n"
+				+ "   Class1 clazz1;\n"
+				+ "}\n",
+			},
+			null /* standardJavaFileManager */,
+			Arrays.asList(
+					"-d", OUTPUT_DIR,
+			        "-source", "1.6",
+			        "-g", "-preserveAllLocals",
+			        "-cp",  OUTPUT_DIR  + File.pathSeparator + _extJar.getAbsolutePath() ,
+			        "-s", OUTPUT_DIR  +  File.separator + "src-gen",
+			        "-processorpath", _extJar.getAbsolutePath(),
+			        "-XprintProcessorInfo", "-XprintRounds",
+			        "-proceedOnError"
+					) /* options */,
+			new String[] { /* compileFileNames */
+				"X.java"
+			},
+			"Round 1:\n"
+			+ "	input files: {p1.X}\n"
+			+ "	annotations: [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen]\n"
+			+ "	last round: false\n"
+			+ "Discovered processor service org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor\n"
+			+ "  supporting [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen]\n"
+			+ "  in jar:"  + Path.of(_extJar.getCanonicalPath()).toUri().toURL().toString() +"!/\n"
+			+ "Processor org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor matches [org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGen] and returns true\n"
+			+ "Round 2:\n"
+			+ "	input files: {p1.gen.Class1,p1.gen.Class2,p1.Class0}\n"
+			+ "	annotations: []\n"
+			+ "	last round: false\n"
+			+ "Processor org.eclipse.jdt.apt.tests.external.annotations.batch.BatchGenProcessor matches [] and returns false\n"
+			+ "Round 3:\n"
+			+ "	input files: {}\n"
+			+ "	annotations: []\n"
+			+ "	last round: true\n" /* expectedOutOutputString */,
+			"" /* expectedErrOutputString */,
+			true /* shouldFlushOutputDirectory */ );
+		// @formatter:on
+	}
+
+
 	protected static class CompilerInvocationTestsArguments {
 		StandardJavaFileManager standardJavaFileManager;
 		List<String> options;
@@ -210,6 +262,7 @@ public class AnnotationProcessingCompilerToolTest extends AbstractBatchCompilerT
 			return result.toString();
 		}
 	}
+
 	static class CompilerInvocationDiagnosticListener implements DiagnosticListener<JavaFileObject> {
 		public static final int NONE = 0;
 		public static final int ERROR = 1;
